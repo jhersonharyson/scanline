@@ -1,0 +1,759 @@
+<html>
+
+<head>
+    <title></title>
+    <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+    <meta http-equiv="content-language" content="en-US" />
+    <meta name="google-site-verification" content="" />
+    <link rel="icon" href="http://www.javascriptteacher.com/favicon.png" />
+    <meta name="viewport" content="width=device-width" />
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css"
+        integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+    <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"
+        integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo"
+        crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"
+        integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1"
+        crossorigin="anonymous"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"
+        integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM"
+        crossorigin="anonymous"></script>
+    <script src='http://www.javascriptteacher.com/js/jquery.js' type='text/javascript'></script>
+    <script src='http://www.javascriptteacher.com/js/ui.js' type='text/javascript'></script>
+    <script src='http://www.javascriptteacher.com/js/hms.js'></script>
+
+    <style>
+        .green-italic {
+            color: green;
+            font-style: italic;
+        }
+
+        .monospace {
+            font-family: 'monospace';
+        }
+
+        .copied {
+            display: none;
+            margin-left: 4px;
+            margin-top: 4px;
+            padding-left: 4px;
+            font-family: verdana;
+            font-size: 12px;
+            background: blue;
+            color: yellow;
+            width: auto;
+        }
+
+        .blink {
+            background-color: black !important;
+            color: yellow;
+        }
+
+        code {
+            font-family: monospace;
+            font-size: 14px !important;
+        }
+
+        code * {
+            font-family: monospace;
+            font-size: 14px !important;
+            font-weight: normal !important;
+        }
+
+
+        .monospace {
+            font-family: monospace;
+        }
+
+        .var {
+            color: blue;
+        }
+
+        .author-credits,
+        .author-credits * {
+            font-size: 12px;
+            font-family: Verdana;
+            margin: 0;
+        }
+    </style>
+
+
+</head>
+
+<body>
+
+    <script>
+
+
+
+        var vertices = []
+
+        var controlPoints = []
+
+        var marker = false
+
+        let mouse = { x: 0, y: 0 };
+
+        let pointer = { x: 0, y: 0 };
+
+        let pixels = [];
+
+        var boardWidth = 14;
+        var boardHeight = 14;
+        var cellWidth = 20;
+        var cellHeight = cellWidth;
+
+        var origin = { x: NaN, y: NaN }
+        var destiny = { x: NaN, y: NaN }
+
+        var update = null
+
+        function erase_board(width, height) {
+            // let index = 0;
+            // for (let h = 0; h < height; h++)
+            //     for (let w = 0; w < width; w++ , index++) {
+            //         pixels[index] = 0;
+            //         document.getElementById("pixel-" + w + "-" + h).style.backgroundColor = "rgba(200,0,0,.5)";
+            //         document.getElementById("pixel-" + w + "-" + h).className = "fields";
+            //     }
+        }
+
+        function pixel(x, y) { pixels[x + (boardWidth * y)] = 1 };
+
+        function render_pixels(width, height) {
+
+            //document.getElementById("pixel-" + 5 + "-" + 2)
+            // let index = 0;
+            // for (let h = 0; h < height; h++)
+            //     for (let w = 0; w < width; w++ , index++)
+            //         if (pixels[index] == 1) {
+
+            //             let tag = "pixel-" + w + "-" + h;
+            //             let id = document.getElementById(tag);
+            //             if (id != null && id != undefined)
+
+            //                 document.getElementById("pixel-" + w + "-" + h).style.backgroundColor = "rgba(200,200,200,.5)"
+            //         }
+        }
+
+
+        let draw_line = (x0, y0, x1, y1) => {
+
+
+            let dx = x1 - x0;
+            let dy = y1 - y0;
+            let D = (2 * dy) - dx;
+            let y = y0;
+
+
+            for (let x = x0; x < x1; x++) {
+
+                pixel(x, y);
+
+                if (D >= 0) {
+                    y = y + 1;
+                    D = D - 2 * dx;
+                }
+                D = D + 2 * dy;
+            }
+        };
+
+        let draw_line_2 = (x1, y1, x2, y2) => {
+            let x, y, dx, dy, dx1, dy1, px, py, xe, ye, i;
+            dx = x2 - x1;
+            dy = y2 - y1;
+            dx1 = Math.abs(dx);
+            dy1 = Math.abs(dy);
+            px = 2 * dy1 - dx1;
+            py = 2 * dx1 - dy1;
+            if (dy1 <= dx1) {
+
+
+                if (dx >= 0) { x = x1; y = y1; xe = x2; } else { x = x2; y = y2; xe = x1; }
+
+                pixel(x, y);
+
+                for (i = 0; x < xe; i++) {
+                    x = x + 1;
+                    if (px < 0) { px = px + 2 * dy1; } else {
+                        if ((dx < 0 && dy < 0) || (dx > 0 && dy > 0)) { y = y + 1; } else { y = y - 1; }
+                        px = px + 2 * (dy1 - dx1);
+                    }
+                    pixel(x, y);
+                }
+            }
+            else {
+                if (dy >= 0) {
+                    x = x1;
+                    y = y1;
+                    ye = y2;
+                }
+                else {
+                    x = x2;
+                    y = y2;
+                    ye = y1;
+                }
+                pixel(x, y);
+                for (i = 0; y < ye; i++) {
+                    y = y + 1;
+                    if (py <= 0) {
+                        py = py + 2 * dx1;
+                    }
+                    else {
+                        if ((dx < 0 && dy < 0) || (dx > 0 && dy > 0)) {
+                            x = x + 1;
+                        }
+                        else {
+                            x = x - 1;
+                        }
+                        py = py + 2 * (dx1 - dy1);
+                    }
+                    pixel(x, y);
+                }
+            }
+        }
+
+
+        function Draw(check) {
+
+            document.getElementById('bresenham-board').innerHTML = '<canvas id="myCanvas" width="' + boardWidth * cellWidth + '" height="' + boardHeight * cellHeight + '" style="position: absolute; left: 0px; top: 0px; z-index: -1;background-color: rgba(0 ,0,0,.1)"> </canvas>'
+
+            let canvas = document.getElementById('myCanvas');
+
+            let context = canvas.getContext('2d');
+
+            context.beginPath();
+
+            context.clearRect(0, 0, canvas.width, canvas.height);
+
+            function draw_canvas(e) {
+
+                mouse.x = e.pageX;
+                mouse.y = e.pageY;
+
+                let canvas = document.getElementById('myCanvas');
+
+                let context = canvas.getContext('2d');
+
+                context.beginPath();
+                context.clearRect(0, 0, canvas.width, canvas.height);
+
+
+                if (!check) {
+                    context.moveTo(cellWidth * pointer.x + (cellWidth / 2), cellWidth * pointer.y + (cellWidth / 2));
+                    context.lineTo(origin.x, origin.y);
+                } else {
+                    context.moveTo(cellWidth * pointer.x + (cellWidth / 2), cellWidth * pointer.y + (cellWidth / 2));
+                    context.lineTo((boardWidth * cellWidth / 2) + (cellWidth / 2), (boardHeight * cellWidth / 2) + (cellWidth / 2));
+                }
+                context.stroke();
+                console.log(e.pageX + "," + e.pageY);
+
+            }
+            document.removeEventListener("mousemove", draw_canvas, false);
+            document.addEventListener("mousemove", draw_canvas, false);
+
+            var target = document.getElementById("bresenham-board");
+
+
+            for (var y = 0; y < boardHeight; y++) {
+                for (var x = 0; x < boardWidth; x++) {
+                    var e = document.createElement("div");
+                    e.setAttribute("id", "pixel-" + x + "-" + y);
+                    e.style.position = "absolute";
+                    e.style.display = "block";
+                    e.style.left = (x * cellWidth) + "px";
+                    e.style.top = (y * cellHeight) + "px";
+                    e.style.width = cellWidth + "px";
+                    e.style.height = cellHeight + "px";
+                    e.style.border = "1px solid #ccc";
+                    e.style.background = "red"
+                    e.onclick = (event) => {
+                        if (marker) {
+                            event.target.style.borderRadius = "20px"
+                            const [_, x, y] = event.target.id.split('-')
+                            document.getElementById('p1').innerText += `{x: ${x}, y: ${y}} \n`
+                            vertices.push(x)
+                            vertices.push(y)
+                        }
+                    }
+                    target.append(e);
+                }
+            }
+
+            function tracer(e) {
+
+
+                pointer.x = mouse.x - $(target).offset().left;
+                pointer.y = mouse.y - $(target).offset().top;
+
+                pointer.x = parseInt(pointer.x / cellWidth);
+                pointer.y = parseInt(pointer.y / cellHeight);
+
+                if (pointer.x < 0)
+                    pointer.x = 0;
+
+                if (pointer.y < 0)
+                    pointer.y = 0;
+
+                if (pointer.x > boardWidth)
+                    pointer.x = boardWidth - 1;
+
+                if (pointer.y > boardHeight)
+                    pointer.y = boardHeight;
+
+                console.log({ x: mouse.x, y: mouse.y })
+                document.getElementById("detalhe").innerHTML = "pixel (x: " + mouse.x + ", y:" + mouse.y + ") bloco (x: " + pointer.x + " ,y: " + pointer.y + ")";
+            }
+
+
+
+            target.removeEventListener("mousemove", tracer, false);
+            target.addEventListener("mousemove", tracer, false);
+
+
+            function draw_in_board() {
+                erase_board(boardWidth, boardHeight);
+                if (check) {
+                    draw_line_2(boardWidth / 2, boardHeight / 2, pointer.x, pointer.y);
+
+                } else {
+                    draw_line_2(parseInt(origin.x / cellWidth), parseInt(origin.y / cellWidth), pointer.x, pointer.y);
+
+                }
+                //console.log({ ox: origin.x, oy: origin.y });
+
+                render_pixels(boardWidth, boardHeight);
+            }
+
+            clearInterval(update)
+            update = setInterval(draw_in_board, 0);
+
+
+        };
+
+        function iterate() {
+            let iterator = 2;
+            setInterval(function () {
+                document.getElementsByClassName("it" + iterator)[0].className = "bg";
+                iterator++;
+            }, 1200);
+        }
+
+
+        function readonly(event) {
+            $('#fieldset').attr({ "disabled": event.target.checked })
+        }
+
+
+
+        function renderizar() {
+
+            const obj = {
+                checkbox: $('#fieldset')[0].disabled,
+                col: parseInt($('#Colunas').val()),
+                row: parseInt($('#Linhas').val()),
+                cel: parseInt($('#Celula').val()),
+                x: parseInt($('#OrigemX').val()),
+                y: parseInt($('#OrigemY').val()),
+                dx: parseInt($('#DestinoX').val()),
+                dy: parseInt($('#DestinoY').val()),
+            }
+            // console.table(obj);
+
+
+            boardWidth = parseInt($('#Colunas').val());
+            boardHeight = parseInt($('#Linhas').val());
+            cellWidth = parseInt($('#Celula').val());
+            cellHeight = cellWidth;
+            if (!document.getElementById('check').checked) {
+                origin = { x: obj.x, y: obj.y }
+                destiny = { x: obj.dx, y: obj.dy }
+            }
+            Draw(document.getElementById('check').checked)
+
+        }
+
+        function multiplo(event) {
+            if (event.target.value < 1) { event.target.value = 0; return; }
+            if (event.target.id === "OrigemX" || event.target.id === "OrigemY") return;
+            event.target.value = parseInt(event.target.value) % 2 == 0 ? parseInt(event.target.value) : parseInt(event.target.value) + 1
+        }
+
+        function FloodFill(x, y, color, edgeColor) {
+            console.table({ x, y })
+            const pixel = document.getElementById("pixel-" + x + "-" + y)
+            if (pixel) {
+                current = pixel.style.backgroundColor
+                if (current != edgeColor && current != color) {
+                    if (x <= boardWidth && x >= 0 && y <= boardHeight && y >= 0) {
+                        document.getElementById("pixel-" + x + "-" + y).style.backgroundColor = color
+                        FloodFill(x + 1, y, color, edgeColor)
+                        FloodFill(x, y + 1, color, edgeColor)
+                        FloodFill(x - 1, y, color, edgeColor)
+                        FloodFill(x, y - 1, color, edgeColor)
+                    }
+                }
+            }
+        }
+
+        function circle_points(x, y, color, x_, y_) {
+            write_pixel(x, y, color, x_, y_);
+            write_pixel(x, -y, color, x_, y_);
+            write_pixel(-x, y, color, x_, y_);
+            write_pixel(-x, -y, color, x_, y_);
+            write_pixel(y, x, color, x_, y_);
+            write_pixel(y, -x, color, x_, y_);
+            write_pixel(-y, x, color, x_, y_);
+            write_pixel(-y, -x, color, x_, y_);
+        }
+
+        function write_pixel(x, y, color = "black", x_ = 0, y_ = 0) {
+            console.table([parseInt(x + x_), parseInt(y + y_)])
+            const pixel = document.getElementById("pixel-" + parseInt(x + x_) + "-" + parseInt(y + y_))
+            if (pixel)
+                pixel.style.backgroundColor = color
+        }
+
+        function midpoint_circle(radius, value, x_, y_) {
+
+            let x = 0;
+            let y = radius;
+            let d = 1 - radius;
+            circle_points(x, y, value, x_, y_);
+            while (y > x) {
+                if (d < 0)
+                    d += 2 * x + 3;
+                else {
+                    d += 2 * (x - y) + 5;
+                    y--;
+                }
+                x++;
+                circle_points(x, y, value, x_, y_);
+            }
+        }
+
+        function centro(event) {
+            marker = true
+            document.body.style.cursor = "crosshair"
+        }
+
+        bezier = function (t, p0, p1, p2, p3) {
+            var cX = 3 * (p1.x - p0.x),
+                bX = 3 * (p2.x - p1.x) - cX,
+                aX = p3.x - p0.x - cX - bX;
+
+            var cY = 3 * (p1.y - p0.y),
+                bY = 3 * (p2.y - p1.y) - cY,
+                aY = p3.y - p0.y - cY - bY;
+
+            var x = (aX * Math.pow(t, 3)) + (bX * Math.pow(t, 2)) + (cX * t) + p0.x;
+            var y = (aY * Math.pow(t, 3)) + (bY * Math.pow(t, 2)) + (cY * t) + p0.y;
+
+            return { x: x, y: y };
+        }
+
+        function plot_bezier(p0, p1, p2, p3, accuracy = 0.001) {
+            write_pixel(p0.x, p0.y);
+            for (var i = 0; i < 1; i += accuracy) {
+                var p = bezier(i, p0, p1, p2, p3);
+                write_pixel(p.x, p.y);
+            }
+        }
+
+        function pintar() {
+            var polygonFilling = function (vertices) {
+
+                var verticesCount = vertices.length,
+                    edgesEntered,
+                    // table cols
+                    yMax, yMin, xInt, invNegSlope;
+
+                // *************************
+
+                if (verticesCount <= 4) {
+                    console.error('polygon has insuffient number of vertices');
+                    return;
+                }
+                if (verticesCount % 2 !== 0) {
+                    console.error('polygon has an incorrect number of vertices');
+                    return;
+                }
+
+                // find out table length
+                var y1 = Math.round(vertices[verticesCount - 1]), y2,
+                    i;
+
+                edgesEntered = 0;
+                for (i = 1; i < verticesCount; i += 2) {
+                    y2 = Math.round(vertices[i]);
+                    if (y1 !== y2) {
+                        y1 = y2;
+                        edgesEntered++;
+                    }
+                }
+                if (edgesEntered < 2) {
+                    console.error('malformed polygon');
+                    return;
+                }
+
+                // setup table length
+                xInt = new Float64Array(edgesEntered);
+                yMin = new Uint32Array(edgesEntered);
+                yMax = new Uint32Array(edgesEntered);
+                invNegSlope = new Float64Array(edgesEntered);
+
+
+
+                var insertTableEntry = function (x1, y1, x2, y2, edgesEntered) {
+                    var biggerY = Math.max(y1, y2),
+                        i = edgesEntered;
+                    for (; i !== 0 && yMax[i - 1] < biggerY; i--) { // insertion sort mechanism
+                        // shift elements to right
+                        yMax[i] = yMax[i - 1];
+                        yMin[i] = yMin[i - 1];
+                        xInt[i] = xInt[i - 1];
+                        invNegSlope[i] = invNegSlope[i - 1];
+                    }
+                    yMax[i] = biggerY;
+                    invNegSlope[i] = -(x2 - x1) / (y2 - y1);
+                    if (biggerY === y1) {
+                        yMin[i] = y2;
+                        xInt[i] = x1;
+                    } else {
+                        yMin[i] = y1;
+                        xInt[i] = x2;
+                    }
+                };
+
+                var x1 = Math.round(vertices[verticesCount - 2]),
+                    y1 = Math.round(vertices[verticesCount - 1]),
+                    x2, y2,
+                    i;
+
+                edgesEntered = 0;
+                for (i = 0; i < verticesCount; i += 2) {
+                    x2 = Math.round(vertices[i]);
+                    y2 = Math.round(vertices[i + 1]);
+                    if (y1 !== y2) { // avoid horizontal edges
+                        insertTableEntry(x1, y1, x2, y2, edgesEntered);
+                        edgesEntered++;
+                    }
+                    x1 = x2;
+                    y1 = y2;
+                }
+
+                // *************************
+
+                // helpers functions	
+                var exclude = function (leftMostEdge, rightMostEdge, scan) {
+                    var i, j;
+                    for (i = leftMostEdge; i <= rightMostEdge; i++) {
+                        if (yMin[i] > scan) {
+                            leftMostEdge++;
+                            for (j = i; j >= leftMostEdge; j--) {
+                                // shift elements to right
+                                yMin[j] = yMin[j - 1];
+                                xInt[j] = xInt[j - 1];
+                                invNegSlope[j] = invNegSlope[j - 1];
+                            }
+                        }
+                    }
+                    return leftMostEdge;
+                };
+
+                var updateXInt = function (leftMostEdge, rightMostEdge) {
+                    for (var i = leftMostEdge; i <= rightMostEdge; i++) {
+                        xInt[i] += invNegSlope[i];
+                    }
+                };
+
+                var include = function (rightMostEdge, scan, edgesEntered) {
+                    for (; rightMostEdge + 1 < edgesEntered && yMax[rightMostEdge + 1] > scan; rightMostEdge++);
+                    return rightMostEdge;
+                };
+
+                var sortXInt = function (leftMostEdge, rightMostEdge) { // bubble sort mechanism
+                    var i, j, tmp;
+                    for (i = leftMostEdge; i <= rightMostEdge - 1; i++) {
+                        for (j = i + 1; j <= rightMostEdge; j++) {
+                            if (xInt[i] > xInt[j]) {
+                                tmp = yMin[i];
+                                yMin[i] = yMin[j];
+                                yMin[j] = tmp;
+                                tmp = xInt[i];
+                                xInt[i] = xInt[j];
+                                xInt[j] = tmp;
+                                tmp = invNegSlope[i];
+                                invNegSlope[i] = invNegSlope[j];
+                                invNegSlope[j] = tmp;
+                            }
+                        }
+                    }
+                };
+
+                var fillScan = async (leftMostEdge, rightMostEdge, scan) => {
+                    var x1, x2, i;
+                    for (i = leftMostEdge; i <= rightMostEdge; i += 2) {
+                        x1 = Math.round(xInt[i]);
+                        x2 = Math.round(xInt[i + 1]);
+                        console.log('drawing line from', x1, 'to', x2, 'at y =', scan);
+                        for (; x1 <= x2; x1++) {
+                            write_pixel(x1, scan)
+                        }
+                    }
+                };
+
+              
+                var scan = yMax[0],
+                    leftMostEdge = 0,
+                    rightMostEdge = -1;
+
+                while (leftMostEdge < edgesEntered) {
+                    scan--;
+                    leftMostEdge = exclude(leftMostEdge, rightMostEdge, scan);
+                    updateXInt(leftMostEdge, rightMostEdge);
+                    rightMostEdge = include(rightMostEdge, scan, edgesEntered);
+                    sortXInt(leftMostEdge, rightMostEdge);
+                    fillScan(leftMostEdge, rightMostEdge, scan);
+                }
+            };
+
+            polygonFilling(vertices);
+        }
+
+        marcar = () => {
+            marker = !marker
+            if(marker)
+                document.body.style.cursor = 'crosshair'
+            
+        }
+
+    </script>
+    <div>
+        <div class="card" style="background-color: rgba(0,0,0,.0)">
+            <div class="card-header">
+                Scan line
+            </div>
+            <div class="card-body">
+                <h5 class="card-title">Configuração</h5>
+                <div>
+                    <div class="form-group col-md-22">
+                        <div class="form-row">
+                            <div class="form-group col-md-1">
+                                <label for="Colunas">Colunas</label>
+                                <input type="number" min="0" class="form-control" id="Colunas" placeholder="Colunas"
+                                    value="10" onchange="multiplo(event)">
+                            </div>
+                            <div class="form-group col-md-1">
+                                <label for="Linhas">Linhas</label>
+                                <input type="number" min="0" class="form-control" id="Linhas" placeholder="Linhas"
+                                    value="10" onchange="multiplo(event)">
+                            </div>
+                            <div class="form-group col-md-1">
+                                <label for="Celula">Célula</label>
+                                <input type="number" min="0" class="form-control" id="Celula" placeholder="Célula"
+                                    value="30" onchange="multiplo(event)">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <div class="form-check" style="display: none">
+                                <input class="form-check-input" type="checkbox" id="check" onchange="readonly(event)"
+                                    checked>
+                                <label class="form-check-label" for="gridCheck">
+                                    Reastrear
+                                </label>
+                            </div>
+                        </div>
+                        <fieldset id="fieldset" disabled="true" style="display: none">
+                            <div class="form-row">
+                                <div class="form-group col-md-1">
+                                    <label for="OrigemX">Origem</label>
+                                    <input type="number" class="form-control" id="OrigemX" placeholder="X"
+                                        onchange="multiplo(event)">
+                                </div>
+                                <div class="form-group col-md-1">
+                                    <label for="OrigemY"><br /></label>
+                                    <input type="number" class="form-control" id="OrigemY" placeholder="Y"
+                                        onchange="multiplo(event)">
+                                </div>
+                            </div>
+                        </fieldset>
+                        <div class="form-row">
+                            <div class="form-group col-md-1">
+                                <label for="color">Vertices</label>
+                                <p id="p1"></p>
+                            </div>
+                        </div>
+                        <button onclick="renderizar()" class="btn btn-primary">Renderizar</button>
+                        <button onclick='javascript:window.location.reload()' class="btn btn-danger">Limpar</button>
+                        <button onclick='pintar()' class="btn btn-danger">Pintar</button>
+                        <button onclick='marcar()' class="btn btn-danger">Marcar</button>
+                        <br /><br />
+                        <div class="form-row">
+
+                        </div>
+                        <br />
+                        <div class="form-row">
+                            <div class="form-group col-md-4">
+                                <br />
+                                <h5 class="card-title">Detalhe</h5>
+                                <div id="detalhe"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group col-md-22">
+                        <div id="scaffold">
+                            <div></div>
+                            <div>
+                                <style>
+                                    .subheader {
+                                        color: gray;
+                                        font-size: 14px;
+                                        display: none;
+                                    }
+                                </style>
+                                <style>
+                                    #bresenham-board {
+                                        width: 600px;
+                                        height: 270px;
+                                        margin: 0 auto;
+                                        display: block;
+                                        position: relative;
+                                    }
+
+                                    #bresenham-board-container {
+                                        width: 100%;
+                                        display: block;
+                                        position: relative;
+                                    }
+                                </style>
+
+
+                                <div id="bresenham-board" style="margin-left: 0">
+
+                                </div>
+                                <canvas id="myCanvas"></canvas>
+
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+
+
+
+
+
+
+    <script type="text/javascript">if (/^((?!chrome|android).)*safari/i.test(navigator.userAgent)) document.getElementsByTagName("body")[0].className = "safari"; if (navigator.appVersion.indexOf("Mac") != -1) { document.getElementsByTagName("body")[0].className = "safari"; }
+    </script>
+
+</body>
+
+</html>
